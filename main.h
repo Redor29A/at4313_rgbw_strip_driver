@@ -4,7 +4,9 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#define F_CPU 20000000
+#ifndef F_CPU
+#define F_CPU 20000000UL
+#endif
 
 #define CLK 0 //port b
 #define DIO 1 //port b

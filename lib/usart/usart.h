@@ -9,7 +9,9 @@
 #ifndef USART_H_
 #define USART_H_
 
-#define F_CPU 20000000
+#ifndef F_CPU
+#define F_CPU 20000000UL
+#endif
 
 #include <avr/io.h>
 #include <util/delay.h>
