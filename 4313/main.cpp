@@ -15,60 +15,73 @@
 /************************************************************************/
 /*                         MENU                                         */
 /*                                                                      */
-/*    _|____0_____|__1__|__2__|__3__|__4__|__5__|__6__|__7__|           */
-/*     |          |  FE | DOR | UPE |     |     |     |     |           */
-/*    0| UART     | 255 | 255 | 255 |     |     |     |     |		    */
-/*    _|__________|_____|_____|_____|_____|_____|_____|_____|           */
-/*     |          | 100 | 255 | 255 | 255 | 255 |     |     |           */
-/*    1| MANUAL   | BRG |  R  |  G  |  B  |  W  |     |     |           */
-/*    _|__________|_____|_____|_____|_____|_____|_____|_____|           */
-/*     |          | 255 |  2  | 100 | 255 |     |     |     |           */
-/*    2| FADE     | C_t | MOD | BRG | SAT |     |  m  |     |           */
-/*    _|__________|_____|_____|_____|_____|_____|_____|_____|           */
-/*     |          |  1  | 255 | 255 | 255 | 255 | 255 | 255 |           */
-/*    3| PULSE    | RND?| C_t | STR |  R  |  G  |  B  |  W  |           */
-/*    _|__________|_____|_____|_____|_____|_____|_____|_____|           */
+/*    _|____0________|__1__|__2__|__3__|__4__|__5__|__6__|__7__|        */
+/*     |             |  FE | DOR | UPE |     |     |     |     |        */
+/*    0| UART|USb    | 255 | 255 | 255 |     |     |     |     |        */
+/*    _|_____________|_____|_____|_____|_____|_____|_____|_____|        */
+/*     |             | 100 | 255 | 255 | 255 | 255 |     |     |        */
+/*    1| MANUAL1|MAn1| BRG |  R  |  G  |  B  |  W  |     |     |        */
+/*    _|_____________|_____|_____|_____|_____|_____|_____|_____|        */
+/*     |             | 100 | 255 | 255 | 255 | 255 |     |     |        */
+/*    2| MANUAL2|MAn2| BRG |  R  |  G  |  B  |  W  |     |     |        */
+/*    _|_____________|_____|_____|_____|_____|_____|_____|_____|        */
+/*     |             | 100 | 255 | 255 | 255 | 255 |     |     |        */
+/*    3| MANUAL3|MAn3| BRG |  R  |  G  |  B  |  W  |     |     |        */
+/*    _|_____________|_____|_____|_____|_____|_____|_____|_____|        */
+/*     |             | 255 |  2  | 100 | 255 |     |     |     |        */
+/*    4| FADE|FAdE   | C_t | MOD | BRG | SAT |     |  m  |     |        */
+/*    _|_____________|_____|_____|_____|_____|_____|_____|_____|        */
+/*     |             |  1  |  4  |     |     |     |     |     |        */
+/*    5| SAVE|SAvE   |SAVE?|DEF M|     |     |     |     |     |        */
+/*    _|_____________|_____|_____|_____|_____|_____|_____|_____|        */
 /*                                                                      */
+/*                                                                      */
+/************************************************************************/
+/*                                                                      */
+/*          P1                               P2                         */
+/*     |   |   |   |               |    |    |    |    |                */
+/*     |   |   |   |               |    |    |    |    |                */
+/*    VCC GND RXD TXD             VCC  GND  RST  MISO MOSI              */
 /*                                                                      */
 /************************************************************************/
 #include "main.h"
 #include "disp_class.h"
 #include "rgbw_pwm.h"
 #include "usart.h"
-#define rand_mass_len 48
 
-const uint8_t PROGMEM rand_mass[3][rand_mass_len] = {
-{0,255,144,216,0,255,127,255,144,229,0,101,0,233,174,255,0,153,233,242,0,233,29,101,195,0,208,255,225,255,255,106,0,0,148,144,0,255,229,4,178,33,229,165,255,63,255,255},
-{255,16,255,0,59,0,255,0,0,255,255,255,255,255,255,238,255,255,0,255,255,255,255,0,0,255,255,0,255,136,106,255,255,255,255,0,0,0,255,255,0,0,255,255,0,255,0,0},
-{225,0,0,255,255,131,0,29,255,0,221,0,229,0,0,0,169,0,255,0,63,0,0,255,255,55,0,208,0,0,0,0,131,187,0,255,255,238,0,0,255,255,0,0,203,0,29,29}};
 uint16_t eeporn_tim;
 uint8_t rand_i;
 uint8_t val, val_tmp;
 int16_t disp_num;
 int8_t val_tmp_enc;
 #define menu_x_len 7
-#define menu_y_len 3
+#define menu_y_len 5
 uint8_t menu[menu_y_len+1][menu_x_len+1] = {
 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+{0x00, 100, 0x00, 0x00, 0x00, 0x00, 0x00},
+{0x00, 100, 0x00, 0x00, 0x00, 0x00, 0x00},
 {0x00, 100, 0x00, 0x00, 0x00, 0x00, 0x00},
 {0x00, 0x00, 0x00, 100, 255, 0x00, 0x00},
 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 const uint8_t menu_max[menu_y_len+1][menu_x_len+1] = {
 {0x00, 255, 255, 255, 0x00, 0x00, 0x00, 0x00},
 {0x00, 100, 255, 255, 255, 255, 0x00, 0x00},
+{0x00, 100, 255, 255, 255, 255, 0x00, 0x00},
+{0x00, 100, 255, 255, 255, 255, 0x00, 0x00},
 {0x00, 255, 2, 100, 255, 255, 255, 0x00},
-{0x00, 1, 255, 255, 255, 255, 255, 255}};
-uint8_t menu_len[menu_y_len+1] = {3,5,4,7}; 
+{0x00, 1, 4, 0x00, 0x00, 0x00, 0x00, 0x00}};
+uint8_t menu_len[menu_y_len+1] = {3,5,5,5,4,2}; 
 uint8_t menu_x;
 uint8_t menu_y;
 const uint8_t menu_name[menu_y_len+1][4] = {
 {0x00, 0x3E, 0x6D, 0x7C},
-{0x76, 0x77, 0x54, 0x5E},
+{0b00010101, 0b01110111, 0b00110111, 0b00000110},
+{0b00010101, 0b01110111, 0b00110111, 0b01011011},
+{0b00010101, 0b01110111, 0b00110111, 0b01001111},
 {0x71, 0x77, 0x5E, 0x79},
-{0x73, 0x3E, 0x38, 0x6D}};
+{0x6D, 0x77, 0x2E, 0x79}};
 uint16_t phase_fade;
 uint8_t phase_pulse;
-bool pulse_dir;
 bool menu_edit;
 bool butn_lst;
 bool butn;
@@ -93,34 +106,31 @@ void eeporn_save(){
 	}
 	if(eeporn_save_flag){
 		eeprom_busy_wait();
-		eeprom_write_byte((uint8_t*)0, menu_x);
+		eeprom_update_byte((uint8_t*)0, menu_x);
 		eeprom_busy_wait();
-		eeprom_write_byte((uint8_t*)1, menu_y);
+		eeprom_update_byte((uint8_t*)1, menu_y);
 		for(uint8_t y = 1; y <= menu_y_len; y++){
 			for(uint8_t x = 1; x <= menu_x_len; x++){
 				eeprom_busy_wait();
-				eeprom_write_byte((uint8_t*)((x+(menu_x_len*y))+2), menu[y][x]);
+				eeprom_update_byte((uint8_t*)((x+(menu_x_len*y))+2), menu[y][x]);
 			}
 		}
 	}
 }
 void eeporn_read(){
-	if (eeprom_read_byte((uint8_t*)0) == 0xff)
-	{
-		eeporn_save();
-	}
-	else{
-		eeprom_busy_wait();
-		menu_x = eeprom_read_byte((uint8_t*)0);
-		eeprom_busy_wait();
-		menu_y = eeprom_read_byte((uint8_t*)1);
-		for(uint8_t y = 1; y <= menu_y_len; y++){
-			for(uint8_t x = 1; x <= menu_x_len; x++){
-				eeprom_busy_wait();
-				menu[y][x] = eeprom_read_byte((uint8_t*)((x+(menu_x_len*y))+2));
-			}
+	//if (eeprom_read_byte((uint8_t*)0) == 0xff)
+	//{
+	///	eeporn_save();
+	//}
+	//else{
+	menu_x = eeprom_read_byte((uint8_t*)0);
+	menu_y = eeprom_read_byte((uint8_t*)1);
+	for(uint8_t y = 1; y <= menu_y_len; y++){
+		for(uint8_t x = 1; x <= menu_x_len; x++){
+			menu[y][x] = eeprom_read_byte((uint8_t*)((x+(menu_x_len*y))+2));
 		}
 	}
+	//}
 }
 void enc_setup(){
 	MCUCR |= (1<<ISC10)|(1<<ISC00); //  Interrupt Sense Control The  Any logical change of INT1 AND INT0 generates an interrupt request.
@@ -216,6 +226,10 @@ ISR(INT1_vect){
 void menu_update(){
 	switch(menu_y){
 		case 0:
+			rgbw[0] = 0;
+			rgbw[1] = 0;
+			rgbw[2] = 0;
+			rgbw[3] = 0;
 			/*if (serial.check_receive_bufer())
 			{
 				uint8_t stat[4];
@@ -232,11 +246,13 @@ void menu_update(){
 			}*/
 		break;
 		case 1:
+		case 2:
+		case 3:
 			for(uint8_t i = 0; i < 4; i++){
 				rgbw[i] = strip.rgb_fix((menu[menu_y][i+2]*menu[menu_y][1])/100);
 			}
 		break;
-		case 2:
+		case 4:
 			if(menu[menu_y][0] >= menu[menu_y][1]/10){
 				if(menu[menu_y][6] != menu[menu_y][2]){
 					phase_fade = 0;
@@ -284,32 +300,18 @@ void menu_update(){
 			}
 			menu[menu_y][0]++;
 		break;
-		case 3:
-			if(menu[menu_y][1] == 1){menu_len[menu_y] = 3;}
-			else{menu_len[menu_y] = 7;}
-			if(menu[menu_y][0] >= menu[menu_y][2]/10){
-				for(uint8_t i = 0; i < 4; i++){
-					rgbw[i] = menu[menu_y][i+4]*phase_pulse/255;
-				}
-				if(phase_pulse >= 255) pulse_dir=false;
-				if(phase_pulse <= menu[menu_y][3]){
-					if (menu[menu_y][1] == 1)
-					{
-						for(uint8_t i = 0; i < 3; i++){
-							//menu[menu_y][i+4] = rand() % 255;
-							menu[menu_y][i+4] = pgm_read_byte(&rand_mass[i][rand_i]);
-						}
-						rand_i++;
-						if (rand_i >= rand_mass_len){rand_i = 0;}
-						//menu[menu_y][7] = rand() % 40;
-					}
-					pulse_dir=true;
-				}
-				if(pulse_dir) phase_pulse++;
-				else phase_pulse--;
-				menu[menu_y][0] = 0;
+		case 5:
+			rgbw[0] = 0;
+			rgbw[1] = 0;
+			rgbw[2] = 0;
+			rgbw[3] = 0;
+			if (menu[menu_y][1] != 0)
+			{
+				menu[menu_y][1] = 0;
+				menu_y = menu[menu_y][2];
+				menu_x = 0;
+				eeporn_save();	
 			}
-			menu[menu_y][0]++;
 		break;
 	}
 }
@@ -325,17 +327,15 @@ int main(void)
 	
 	TM1637 disp(2);
 	
-	
-	
 	uint8_t data[4];
 	sei();
     while (1) 
     {
-		if (eeporn_tim >= 65534){
+		/*if (eeporn_tim >= 65534){
 			eeporn_save();
 			eeporn_tim = 0;
 		}
-		eeporn_tim++;
+		eeporn_tim++;*/
 
 		if(butn_tim > 50){
 			butn = ((PIND & (1<<PIND4)) > 1);

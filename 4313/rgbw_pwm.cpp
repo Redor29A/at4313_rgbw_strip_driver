@@ -46,8 +46,8 @@ void RGBW::pwm_set(uint8_t* rgbw){
 	sei();
 }
 uint8_t RGBW::rgb_fix(uint8_t color){
-	return color;
-	//return pgm_read_byte(&logPwm[color]);
+	//return color;
+	return pgm_read_byte(&logPwm[color]);
 }
 
 RGBW::RGBW(uint8_t speed){
