@@ -1,6 +1,6 @@
 # Target MCU and clock. F_CPU is used by avr-libc delay helpers.
 MCU = attiny4313
-PROGRAMMER = usbasp
+PROGRAMMER = usbasp-clone
 F_CPU = 20000000UL
 
 # Output firmware name: build/firmware.elf and build/firmware.hex.
@@ -24,6 +24,7 @@ AVRDUDE = avrdude
 # -mmcu selects the chip, -DF_CPU sets clock for delays, -Os keeps firmware small.
 CXXFLAGS = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -Os -std=c++17 -I.
 CXXFLAGS += -Wall -Wextra
+CXXFLAGS += -flto
 
 # Header search paths for project libraries.
 CXXFLAGS += -Ilib/disp
@@ -31,14 +32,14 @@ CXXFLAGS += -Ilib/pwm
 CXXFLAGS += -Ilib/usart
 
 # Linker target MCU must match compiler target MCU.
-LDFLAGS = -mmcu=$(MCU)
+LDFLAGS = -mmcu=$(MCU) -flto
 
 BUILD_DIR = build
 
 # Convert each .cpp path into a matching .o path under build/.
 OBJ = $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 
-all: $(BUILD_DIR)/$(TARGET).hex
+all: $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).eep
 
 # Create the root build directory.
 $(BUILD_DIR):
@@ -58,10 +59,15 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJ)
 $(BUILD_DIR)/$(TARGET).hex: $(BUILD_DIR)/$(TARGET).elf
 	$(OBJCOPY) -O ihex -R .eeprom $< $@
 	$(SIZE) $<
+	$(SIZE) -C --mcu=$(MCU) $<
+
+# EEPROM image with EEMEM defaults.
+$(BUILD_DIR)/$(TARGET).eep: $(BUILD_DIR)/$(TARGET).elf
+	$(OBJCOPY) -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0 $< $@
 
 # Flash the HEX file through USBasp.
-flash: $(BUILD_DIR)/$(TARGET).hex
-	$(AVRDUDE) -c $(PROGRAMMER) -p t4313 -U flash:w:$<:i
+flash: $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).eep
+	$(AVRDUDE) -c $(PROGRAMMER) -p t4313 -U flash:w:$(BUILD_DIR)/$(TARGET).hex:i -U eeprom:w:$(BUILD_DIR)/$(TARGET).eep:i
 
 # Remove all generated build files.
 clean:

@@ -50,7 +50,7 @@ uint8_t RGBW::rgb_fix(uint8_t color){
 	return pgm_read_byte(&logPwm[color]);
 }
 
-RGBW::RGBW(uint8_t speed){
+RGBW::RGBW(uint8_t){
 	timer1_setup();
 	timer0_setup();
 }
